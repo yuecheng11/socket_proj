@@ -23,7 +23,7 @@ InerAddress::InerAddress(const char* ip,unsigned short port)
 	//_addr.sin_addr.s_addr = INADDR_ANY;
 	_addr.sin_addr.s_addr = inet_addr(ip);
 }
-}
+
 InerAddress::InerAddress(const struct sockaddr_in& addr)
 	:_addr(addr)
 {
@@ -40,6 +40,6 @@ string InerAddress::getIp()
 }
 unsigned short InerAddress::getPort()
 {
-	return ntohs(_addr.sin_port)
+	return ntohs(_addr.sin_port);
 }
 

@@ -46,8 +46,8 @@ void Socket::ready(InerAddress& addr)
 int Socket::accept()
 {
 	struct sockaddr_in cliaddr;
-	int len = sizeof(struct sockaddr_in);
-	int peerFd = accept(sockfd,(struct sockaddr*)(&cliaddr),&len);
+	socklen_t len = sizeof(struct sockaddr_in);
+	int peerFd = ::accept(_sockFd,(struct sockaddr*)(&cliaddr),&len);
 	if(peerFd < 0)
 	{
 		printf("accept error: %s\n",strerror(errno));
@@ -61,7 +61,7 @@ void Socket::bind(InerAddress& addr)
 	
 	int ret = ::bind(_sockFd,
 		(struct sockaddr*)(addr.getInetAddressPtr()),
-		sizeof(struct sockaddr))
+		sizeof(struct sockaddr));
 	if(ret < 0)
 	{
 		printf("bind error: %s\n",strerror(errno));
@@ -94,7 +94,7 @@ void Socket::setReuseAddr(bool flag)
 		exit(0);
 	}
 }
-void socket::setReusePort(bool flag)
+void Socket::setReusePort(bool flag)
 {
 #ifdef SO_REUSEPORT
 
@@ -121,5 +121,36 @@ void socket::setReusePort(bool flag)
 
 void Socket::shutdownWrite()
 {
+	int ret = ::shutdown(_sockFd,SHUT_WR);
+	if(ret == -1)
+	{
+	    perror("shutdown error!");
+		exit(EXIT_FAILURE);
+	}
+}
 
+InerAddress Socket::getLocalAddr(int fd)
+{
+	struct sockaddr_in addr;
+	socklen_t len = sizeof(struct sockaddr_in);
+
+	int ret = ::getsockname(fd,(struct sockaddr*)&addr,&len);
+	if(-1 == ret)
+	{
+		perror("getsockname error");
+	}
+	return InerAddress(addr);
+}
+
+InerAddress Socket::getPeerAddr(int fd)
+{
+	struct sockaddr_in addr;
+	socklen_t len = sizeof(struct sockaddr_in);
+
+	int ret = ::getpeername(fd,(struct sockaddr*)&addr,&len);
+	if(-1 == ret)
+	{
+		perror("getsockname error");
+	}
+	return InerAddress(addr);
 }
