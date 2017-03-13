@@ -5,7 +5,7 @@ CPPFLAGS:= -std=c++11 -g
 LIBS:= -lpthread
 INC_FILE:= $(addprefix -I, $(INC_DIR))
 SRC_FILE:= $(wildcard ./*.cpp)
-TARGET:=client.exe
+TARGET:=server.exe
 
 $(TARGET):$(SRC_FILE)
 	$(CC) -o $@ $^ $(CPPFLAGS) $(INC_FILE) $(LIBS)
