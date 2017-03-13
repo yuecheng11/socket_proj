@@ -15,7 +15,7 @@
 using namespace std;
 int createSocketFd()
 {
-	int sockfd = socket(AF_INET,SOCK_STREAM,0);
+	int sockfd = ::socket(AF_INET,SOCK_STREAM,0);
 	if(sockfd == -1)
 	{
 		printf("socket error: %s\n",strerror(errno));

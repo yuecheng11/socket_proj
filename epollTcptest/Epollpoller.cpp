@@ -1,10 +1,10 @@
 #include "EpollPoller.h"
-#include "TcpConnection.h"
 #include <stdio.h>
-#include <stdlib.g>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include <sys/epoll.h>
 const int kInitNumber = 2048;
@@ -53,7 +53,7 @@ void delEpollFd(int epollfd,int fd)
 	
 }
 
-ssize_t SocketIO::recvPeek(int fd,char * buff,size_t count)
+ssize_t recvPeek(int fd,char * buff,size_t count)
 {
 	ssize_t nread;
 	do
@@ -72,7 +72,7 @@ bool isConectionClosed(int fd)
 	if(nread == -1)
 	{
 		perror("recv peek");
-		exit(EXT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	return (0 == nread);
@@ -169,12 +169,12 @@ void EpollPoller::handleConnection()
 	//jiang xinlianjie tianjia dao epoll shilide jian ting lie biao zhong
 	addEpollFd(_epollfd,peerfd);
 
-	TcpConnection* pConn = new TcpConnection(peerfds);
+	TcpConnection* pConn = new TcpConnection(peerfd);
 
-	_connMap[peerfd] = pConn;
-
+	//_connMap[peerfd] = pConn;
+	_connMap.insert(map<int,TcpConnection*>::value_type(peerfd,pConn));
 	//shou dao xin lianjie gei kehuduan fa yixie xinxi 
-	pConn.send("welcome to server");
+	pConn->send("welcome to server");
 }
 
 
@@ -188,7 +188,7 @@ void EpollPoller::handleMessage(int fd)
 	{
 		::close(fd);
 		
-		delEpollFd(_epollfd,fd)
+		delEpollFd(_epollfd,fd);
 		_connMap.erase(it);
 	}
 	else

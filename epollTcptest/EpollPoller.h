@@ -1,8 +1,13 @@
 #ifndef _MY_EPOLLPOLLER_H_
 #define _MY_EPOLLPOLLER_H_
 #include "Noncopy.h"
+#include "TcpConnection.h"
 #include <vector>
 #include <map>
+#include <sys/epoll.h>
+#include <iostream>
+
+using namespace std;
 
 class EpollPoller:Noncopy
 {
