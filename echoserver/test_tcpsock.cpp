@@ -10,6 +10,24 @@
 
 
 using namespace std;
+void AcceptConn(Socket listensock,int events,void *arg)
+{
+	//client addr
+	struct sockaddr_in sin;
+	socklen_t len = sizeof(struct sockaddr_in);
+	int listenfd = listensock.getfd();
+	int nclientfd,i;
+	nclientfd = listensock.accept();
+	if(nclientfd < 0)
+	{
+		cout<<"accept clint error"<<endl;
+		return;
+	}
+	do
+	{
+		for(i = 0 ;i < )
+	}
+}
 
 int main(int argc,char** argv)
 {
@@ -24,12 +42,15 @@ int main(int argc,char** argv)
 	InerAddress addr(port);
 	
 	//create socket;
-	Socket sock;  
-	sock.ready(addr);
+	Socket listensock;  
+	listensock.ready(addr);
 
+	TcpConnection conn(listensock);
+	
 	
 	EpollPoller epoolInstance;
-
+	epoolInstance.AddListenSock(listensock.getfd());
+	
 
 	return 0;
 }
