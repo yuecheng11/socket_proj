@@ -79,7 +79,7 @@ bool isConectionClosed(int fd)
 	return (0 == nread);
 }
 
-EpollPoller::EpollPoller(int listenfd)
+EpollPoller::s(int listenfd)
 	:_epollfd(crateEpollFd())
 	,_listenfd(listenfd)
 	,_isLooping(false)
