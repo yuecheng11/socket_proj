@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <string>
 
 #include <sys/epoll.h>
 const int kInitNumber = 2048;
@@ -25,10 +26,10 @@ void addEpollFd(int epollfd,int fd)
 {
 	struct epoll_event ev;
 	ev.data.fd = fd;
-	ev.events = EPOLLIN;
+	ev.events = EPOLLIN|EPOLLET;
 
 	int ret = ::epoll_ctl(epollfd,EPOLL_CTL_ADD,fd,&ev);
-	if(fd == -1)
+	if(ret == -1)
 	{
 		perror("epoll epoll_ctl add");
 		exit(EXIT_FAILURE);
@@ -83,7 +84,8 @@ EpollPoller::EpollPoller(int listenfd)
 	,_listenfd(listenfd)
 	,_isLooping(false)
 {
-	eventList.reserve(kInitNumber);
+	//eventList.reserve(kInitNumber);
+	eventList[MAXNUM] = {0};
 	addEpollFd(_epollfd,_listenfd);
 	
 }
@@ -113,8 +115,8 @@ void EpollPoller::waitEpollfd()
 	int nready;
 	do
 	{
-		nready = ::epoll_wait(_epollfd,&(*eventList.begin()),
-					eventList.size(),5000);
+		nready = epoll_wait(_epollfd,eventList,
+					MAXNUM,5000);
 		
 	}while(nready == -1 && errno == EINTR);
 	
@@ -130,10 +132,10 @@ void EpollPoller::waitEpollfd()
 	else
 	{
 		//kuo da rong liang
-		if(nready == static_cast<int>(eventList.size()))
+		/*if(nready == static_cast<int>(eventList.size()))
 		{
 			eventList.resize(nready*2);
-		}
+		}*/
 
 		for(int idx = 0;idx<nready;++idx)
 		{
@@ -174,12 +176,13 @@ void EpollPoller::handleConnection()
 	//_connMap[peerfd] = pConn;
 	_connMap.insert(map<int,TcpConnection*>::value_type(peerfd,pConn));
 	//shou dao xin lianjie gei kehuduan fa yixie xinxi 
-	pConn->send("welcome to server");
+	pConn->send("hi welcome to server");
 }
 
 
 void EpollPoller::handleMessage(int fd)
 {
+	string s;
 	bool isClosed = isConectionClosed(fd);
 	map<int,TcpConnection*>::iterator it = _connMap.find(fd);
 	assert(it != _connMap.end());
@@ -193,7 +196,10 @@ void EpollPoller::handleMessage(int fd)
 	}
 	else
 	{
-		it->second->receive();
-		it->second->send("test");
+		cout<<"handle message receive data"<<endl;
+		s.clear();
+		s = it->second->receive();
+		cout<<s<<endl;
+		it->second->send("test program");
 	}
 }

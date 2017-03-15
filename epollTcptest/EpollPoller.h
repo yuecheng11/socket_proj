@@ -7,6 +7,7 @@
 #include <sys/epoll.h>
 #include <iostream>
 
+#define MAXNUM 100
 using namespace std;
 
 class EpollPoller:Noncopy
@@ -26,7 +27,8 @@ private:
 	int _listenfd;
 	bool _isLooping;
 
-	vector<struct epoll_event> eventList;
+	//vector<struct epoll_event> eventList;
+	struct epoll_event eventList[MAXNUM];
 	map<int,TcpConnection*> _connMap;
 };
 

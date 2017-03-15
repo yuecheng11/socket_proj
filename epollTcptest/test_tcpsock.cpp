@@ -13,10 +13,10 @@ using namespace std;
 
 int main()
 {
-	signal(SIGPIPE,SIG_IGN);
+	//signal(SIGPIPE,SIG_IGN);
 	Socket sock;
 	//string str;
-	char buf[1024];
+	//char buf[1024];
 	InerAddress addr(5666);
 	sock.ready(addr);
 
