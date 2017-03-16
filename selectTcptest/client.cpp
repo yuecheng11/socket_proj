@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <arpa/inet.h>
+
 
 #define MAXLINE 1024
 #define IPADDRESS "127.0.0.1"

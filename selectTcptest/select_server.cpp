@@ -10,6 +10,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <assert.h>
+#include <arpa/inet.h>
+
 
 #define IPADDR      "127.0.0.1"
 #define PORT        8787
@@ -97,7 +99,7 @@ ACCEPT:
         fprintf(stderr,"too many clients.\n");
         return -1;
     }
-101 }
+ }
 
 static int handle_client_msg(int fd, char *buf) 
 {
