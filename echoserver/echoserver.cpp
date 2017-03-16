@@ -24,6 +24,11 @@ struct myevent_s
     int len, s_offset;  
     long last_active; // last active time  
 };  
+
+int g_epollFd;  
+myevent_s g_Events[MAX_EVENTS+1]; // g_Events[MAX_EVENTS] is used by listen fd  
+
+
 // set event  
 void EventSet(myevent_s *ev, int fd, void (*call_back)(int, int, void*), void *arg)  
 {  
@@ -44,10 +49,12 @@ void EventAdd(int epollFd, int events, myevent_s *ev)
     int op;  
     epv.data.ptr = ev;  
     epv.events = ev->events = events;  
-    if(ev->status == 1){  
+    if(ev->status == 1)
+	{  
         op = EPOLL_CTL_MOD;  
     }  
-    else{  
+    else
+	{  
         op = EPOLL_CTL_ADD;  
         ev->status = 1;  
     }  
@@ -59,14 +66,14 @@ void EventAdd(int epollFd, int events, myevent_s *ev)
 // delete an event from epoll  
 void EventDel(int epollFd, myevent_s *ev)  
 {  
+	cout<<"EventDel : fd : "<<ev->fd<<endl;
     struct epoll_event epv = {0, {0}};  
     if(ev->status != 1) return;  
     epv.data.ptr = ev;  
     ev->status = 0;
     epoll_ctl(epollFd, EPOLL_CTL_DEL, ev->fd, &epv);  
 }  
-int g_epollFd;  
-myevent_s g_Events[MAX_EVENTS+1]; // g_Events[MAX_EVENTS] is used by listen fd  
+
 
 void RecvData(int fd, int events, void *arg);  
 void SendData(int fd, int events, void *arg);  
@@ -84,7 +91,7 @@ void AcceptConn(int fd, int events, void *arg)
         }
         printf("%s: accept, %d", __func__, errno);  
         return;  
-    }  
+    }
     do  
     {  
         for(i = 0; i < MAX_EVENTS; i++)  
@@ -146,6 +153,7 @@ void RecvData(int fd, int events, void *arg)
 // send data  
 void SendData(int fd, int events, void *arg)  
 {  
+	cout<<"SendData"<<endl;
     struct myevent_s *ev = (struct myevent_s*)arg;  
     int len;  
     // send data  
@@ -174,7 +182,9 @@ void InitListenSocket(int epollFd, short port)
     int listenFd = socket(AF_INET, SOCK_STREAM, 0);  
     fcntl(listenFd, F_SETFL, O_NONBLOCK); // set non-blocking  
     printf("server listen fd = %d\n", listenFd);
-	
+
+    //设置自定义g_Events数组，将listenFd保存到g_Events[MAX_EVENTS]位置
+	//设置listenedFd的回调函数AcceptConn 
     EventSet(&g_Events[MAX_EVENTS], listenFd, AcceptConn, &g_Events[MAX_EVENTS]);  
     // add listen socket  
     EventAdd(epollFd, EPOLLIN, &g_Events[MAX_EVENTS]);  
@@ -212,18 +222,21 @@ int main(int argc, char **argv)
         long now = time(NULL);  
         for(int i = 0; i < 100; i++, checkPos++) // doesn't check listen fd  
         {  
-            if(checkPos == MAX_EVENTS) checkPos = 0; // recycle  
-            if(g_Events[checkPos].status != 1) continue;  
+            if(checkPos == MAX_EVENTS) 
+				checkPos = 0; // recycle  
+            if(g_Events[checkPos].status != 1) 
+				continue;  
             long duration = now - g_Events[checkPos].last_active;  
+			cout<<"duration time :" <<duration<<endl;
             if(duration >= 60) // 60s timeout  
             {  
                 close(g_Events[checkPos].fd);  
-                printf("[fd=%d] timeout[%d--%d].\n", g_Events[checkPos].fd, g_Events[checkPos].last_active, now);  
+                printf("[fd=%d] timeout[%ld--%ld].\n", g_Events[checkPos].fd, g_Events[checkPos].last_active, now);  
                 EventDel(g_epollFd, &g_Events[checkPos]);  
             }  
         }  
         // wait for events to happen  
-        int fds = epoll_wait(g_epollFd, events, MAX_EVENTS, 1000);  
+        int fds = epoll_wait(g_epollFd, events, MAX_EVENTS, 5000);  
         if(fds < 0)
 		{  
 			if(fds == -1 && fds == EINTR)
@@ -246,10 +259,12 @@ int main(int argc, char **argv)
             myevent_s *ev = (struct myevent_s*)events[i].data.ptr;  
             if((events[i].events&EPOLLIN)&&(ev->events&EPOLLIN)) // read event  
             {  
+            	cout<<"handle EPOLLIN event"<<endl;
                 ev->call_back(ev->fd, events[i].events, ev->arg);  
             }  
             if((events[i].events&EPOLLOUT)&&(ev->events&EPOLLOUT)) // write event  
             {  
+            	//cout<<"handle EPOLLOUT event"<<endl;
                 ev->call_back(ev->fd, events[i].events, ev->arg);  
             }  
         }  
