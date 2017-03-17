@@ -163,23 +163,21 @@ void EpollPoller::waitEpollfd()
 
 		for(int idx = 0; idx != nready; ++idx)
 		{
-			if(_eventList[idx].data.fd == _listenfd)
+			if(_eventList[idx].data.fd == _listenfd & EPOLLIN )
 			{//处理新连接
-				if(_eventList[idx].events & EPOLLIN)
-				{
-					handleConnection();
-				}
+				
+				handleConnection();
+
 			}
-			else
+			else if(_eventList[idx].events & EPOLLIN)
+			{//处理旧连接
+				handleMessage(_eventList[idx].data.fd,READ);
+			}
+				
+			else if(_eventList[idx].events & EPOLLOUT)
 			{
-				if(_eventList[idx].events & EPOLLIN)
-				{//处理旧连接
-					handleMessage(_eventList[idx].data.fd,0);
-				}
-				else if(_eventList[idx].events & EPOLLOUT)
-				{
-					handleMessage(_eventList[idx].data.fd,1);
-				}
+				handleMessage(_eventList[idx].data.fd,WRITE);
+			}
 			}
 		}
 	}

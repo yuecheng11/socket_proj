@@ -35,6 +35,8 @@ void onReadMessage(wd::TcpConnectionPtr conn)
 	std::string msg = conn->receive();
 	cout << msg << endl;
 	//conn->send(msg);
+
+	
 }
 
 void onWriteMessage(wd::TcpConnectionPtr conn)
