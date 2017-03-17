@@ -1,8 +1,4 @@
- ///
- /// @file    TcpConnection.h
- /// @author  lemon(haohb13@gmail.com)
- /// @date    2016-03-23 11:15:40
- ///
+ 
  
 #ifndef _MY_TCPCONNECTION_H_
 #define _MY_TCPCONNECTION_H_
@@ -37,10 +33,15 @@ public:
 
 	void handleConnectionCallback();
 	void handleMessageCallback();
+	void handleReadMessageCallback();
+	void handleWriteMessageCallback();
 	void handleCloseCallback();
 
 	void setConnectionCallback(TcpConnectionCallback cb);
 	void setMessageCallback(TcpConnectionCallback cb);
+
+	void setReadMessageCallback(TcpConnectionCallback cb);
+	void setWriteMessageCallback(TcpConnectionCallback cb);
 	void setCloseCallback(TcpConnectionCallback cb);
 
 private:
@@ -53,6 +54,9 @@ private:
 	TcpConnectionCallback _onConnectionCb;
 	TcpConnectionCallback _onMessageCb;
 	TcpConnectionCallback _onCloseCb;
+
+	TcpConnectionCallback onReadMessage;
+	TcpConnectionCallback onWriteMessage;
 };
 
 }// end of namespace wd

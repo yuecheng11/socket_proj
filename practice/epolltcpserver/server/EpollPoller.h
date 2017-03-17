@@ -1,8 +1,4 @@
- ///
- /// @file    EpollPoller.h
- /// @author  lemon(haohb13@gmail.com)
- /// @date    2016-03-23 15:23:48
- ///
+
 #ifndef __MY_EPOLLPOLLER_H_
 #define __MY_EPOLLPOLLER_H_
 #include "Noncopyable.h"
@@ -15,8 +11,11 @@
 using std::vector;
 using std::map;
 
+#define READ 0
+#define WRITE 1
 namespace wd
 {
+
 class EpollPoller : Noncopyable
 {
 public:
@@ -30,11 +29,14 @@ public:
 	void setConnectionCallback(EpollPollerCallback cb);
 	void setMessageCallback(EpollPollerCallback cb);
 	void setCloseCallback(EpollPollerCallback cb);
+	
+	void setReadMessageCallback(EpollPollerCallback cb);
+	void setWriteMessageCallback(EpollPollerCallback cb);
 
 private:
 	void waitEpollfd();
 	void handleConnection();
-	void handleMessage(int fd);
+	void handleMessage(int fd,int op);
 
 private:
 	int _epollfd;
@@ -47,6 +49,9 @@ private:
 	EpollPollerCallback _onConnection;
 	EpollPollerCallback _onMessage;
 	EpollPollerCallback _onClose;
+	
+	EpollPollerCallback onReadMessage;
+	EpollPollerCallback onWriteMessage;
 	
 };
 

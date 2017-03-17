@@ -1,9 +1,4 @@
- ///
- /// @file    TcpConnection.cc
- /// @author  lemon(haohb13@gmail.com)
- /// @date    2016-03-23 11:20:09
- ///
- 
+
 #include "TcpConnection.h"
 #include <string.h>
 #include <iostream>
@@ -71,6 +66,16 @@ void TcpConnection::setMessageCallback(TcpConnectionCallback cb)
 	_onMessageCb = cb;
 }
 
+void TcpConnection::setReadMessageCallback(TcpConnectionCallback cb)
+{
+	onReadMessage = cb;
+}
+
+void TcpConnection::setWriteMessageCallback(TcpConnectionCallback cb)
+{
+	onWriteMessage = cb;
+}
+
 void TcpConnection::setCloseCallback(TcpConnectionCallback cb)
 {
 	_onCloseCb = cb;
@@ -87,6 +92,19 @@ void TcpConnection::handleMessageCallback()
 	if(_onMessageCb)
 		_onMessageCb(shared_from_this());
 }
+
+void TcpConnection::handleReadMessageCallback()
+{
+	if(onReadMessage)
+		onReadMessage(shared_from_this());
+}
+
+void TcpConnection::handleWriteMessageCallback()
+{
+	if(onWriteMessage)
+		onWriteMessage(shared_from_this());
+}
+
 
 void TcpConnection::handleCloseCallback()
 {

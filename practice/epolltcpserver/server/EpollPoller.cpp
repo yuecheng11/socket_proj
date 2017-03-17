@@ -1,9 +1,3 @@
- ///
- /// @file    EpollPoller.cc
- /// @author  lemon(haohb13@gmail.com)
- /// @date    2016-03-23 15:24:24
- ///
- 
 
 #include "EpollPoller.h"
 #include <stdio.h>
@@ -12,7 +6,8 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-
+#include <iostream>
+using namespace std;
 const int kInitNumber = 2048;
 
 int createEpollFd()
@@ -57,6 +52,21 @@ void delEpollFd(int efd, int fd)
 	}
 }
 
+void modEpollFd(int efd,int fd,int state)
+{
+	struct epoll_event ev;
+	ev.data.fd = fd;
+	ev.events = state;
+	int ret = ::epoll_ctl(efd, 
+						  EPOLL_CTL_MOD, 
+						  fd,
+						  &ev);
+	if(-1 == ret)
+	{
+		perror("epoll_ctl mod");
+		exit(EXIT_FAILURE);
+	}
+}
 
 size_t recvPeek(int sockfd, char * buff, size_t count)
 {
@@ -164,7 +174,11 @@ void EpollPoller::waitEpollfd()
 			{
 				if(_eventList[idx].events & EPOLLIN)
 				{//处理旧连接
-					handleMessage(_eventList[idx].data.fd);
+					handleMessage(_eventList[idx].data.fd,0);
+				}
+				else if(_eventList[idx].events & EPOLLOUT)
+				{
+					handleMessage(_eventList[idx].data.fd,1);
 				}
 			}
 		}
@@ -185,7 +199,9 @@ void EpollPoller::handleConnection()
 
 	TcpConnectionPtr pConn(new TcpConnection(peerfd));
 	pConn->setConnectionCallback(_onConnection);
-	pConn->setMessageCallback(_onMessage);
+	//pConn->setMessageCallback(_onMessage);
+	pConn->setReadMessageCallback(onReadMessage);
+	pConn->setWriteMessageCallback(onWriteMessage);
 	pConn->setCloseCallback(_onClose);
 	_connMap[peerfd] = pConn;
 	//给客户端发一些信息 onConnection();
@@ -194,7 +210,7 @@ void EpollPoller::handleConnection()
 }
 
 
-void EpollPoller::handleMessage(int fd)
+void EpollPoller::handleMessage(int fd,int op)
 {
 	bool isClosed = isConnectionClose(fd);
 	map<int, TcpConnectionPtr>::iterator it = 
@@ -209,7 +225,21 @@ void EpollPoller::handleMessage(int fd)
 	}
 	else
 	{//如果是客户端发过来的数据
-		it->second->handleMessageCallback();
+		//it->second->handleMessageCallback();
+		switch(op)
+		{
+			case 0:
+				it->second->handleReadMessageCallback();
+				modEpollFd(_epollfd,fd,EPOLLOUT);
+				break;
+			case 1:	
+				it->second->handleWriteMessageCallback();
+				modEpollFd(_epollfd,fd,EPOLLIN);
+				break;
+			default:
+				std::cout<<"op error"<<std::endl;
+				break;
+		}
 	}
 }
 
@@ -221,6 +251,16 @@ void EpollPoller::setConnectionCallback(EpollPollerCallback cb)
 void EpollPoller::setMessageCallback(EpollPollerCallback cb)
 {
 	_onMessage = cb;
+}
+
+void EpollPoller::setReadMessageCallback(EpollPollerCallback cb)
+{
+	onReadMessage= cb;
+}
+
+void EpollPoller::setWriteMessageCallback(EpollPollerCallback cb)
+{
+	onWriteMessage = cb;
 }
 
 void EpollPoller::setCloseCallback(EpollPollerCallback cb)

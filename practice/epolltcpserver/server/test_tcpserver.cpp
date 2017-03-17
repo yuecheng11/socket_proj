@@ -1,8 +1,4 @@
- ///
- /// @file    test_socket.cc
- /// @author  lemon(haohb13@gmail.com)
- /// @date    2016-03-22 14:54:59
- ///
+
  
 #include "Socket.h"
 #include "InetAddress.h"
@@ -13,6 +9,10 @@
 #include <string.h>
 #include <string>
 #include <iostream>
+#include <string>
+#include <stdlib.h>
+
+
 
 using std::cout;
 using std::endl;
@@ -20,7 +20,7 @@ using std::endl;
 void onConnection(wd::TcpConnectionPtr conn)
 {
 	cout << conn->toString() << "has connected!" << endl;
-	conn->send("welcome to server.");
+	//conn->send("welcome to server.");
 }
 
 void onMessage(wd::TcpConnectionPtr conn)
@@ -30,12 +30,30 @@ void onMessage(wd::TcpConnectionPtr conn)
 	conn->send(msg);
 }
 
+void onReadMessage(wd::TcpConnectionPtr conn)
+{
+	std::string msg = conn->receive();
+	cout << msg << endl;
+	//conn->send(msg);
+}
+
+void onWriteMessage(wd::TcpConnectionPtr conn)
+{
+	char buf[1024] = {0};
+	memset(buf,0,sizeof(buf));
+	cout<<"please send : ";
+	fgets(buf,sizeof(buf),stdin);
+	std::string str(buf);
+	conn->send(str);
+}
+
+
 void onClose(wd::TcpConnectionPtr conn)
 {
 	cout << conn->toString() << " hase close." << endl;
 }
 
-int main(void)
+int main()
 {
 	wd::Socket sock;
 	wd::InetAddress addr(8888);
@@ -43,7 +61,9 @@ int main(void)
 
 	wd::EpollPoller epollPoller(sock.fd());
 	epollPoller.setConnectionCallback(onConnection);
-	epollPoller.setMessageCallback(onMessage);
+	//epollPoller.setMessageCallback(onMessage);
+	epollPoller.setReadMessageCallback(onReadMessage);
+	epollPoller.setWriteMessageCallback(onWriteMessage);
 	epollPoller.setCloseCallback(onClose);
 
 	epollPoller.loop();
